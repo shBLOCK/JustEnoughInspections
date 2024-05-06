@@ -36,4 +36,5 @@ Language Support
 
 Known Issues
 ---
-Sometimes inspections won't automatically update when inspection comments are changed. Try reopening files or editing the code to force an refresh. 
+Sometimes inspections won't automatically update when inspection comments are changed.  
+Try reopening files or editing the code to force an refresh. 
