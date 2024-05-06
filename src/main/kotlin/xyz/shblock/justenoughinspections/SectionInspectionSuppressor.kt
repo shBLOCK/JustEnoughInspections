@@ -9,7 +9,6 @@ import com.intellij.psi.util.*
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import com.intellij.util.containers.Stack
-import com.intellij.util.takeWhileInclusive
 import kotlinx.collections.immutable.toImmutableList
 import java.util.regex.Pattern
 
@@ -24,25 +23,27 @@ class SectionInspectionSuppressor : InspectionSuppressor {
         val stack = Stack<Pair<Int, String>>()
         val lastLeaf = PsiTreeUtil.lastChild(file)
         generateSequence(PsiTreeUtil.firstChild(file), PsiTreeUtil::nextLeaf)
-            .takeWhileInclusive { it !== lastLeaf }
-            .forEach {
+            .takeWhile {
+                if (it === lastLeaf) return@takeWhile false
+
                 if (it is PsiComment) {
                     val text = it.text
 
                     val mb = PATTERN_BEGIN.matcher(text)
                     if (mb.matches()) {
                         stack.push(Pair(it.endOffset + 1, mb.group(1)))
-                        return@forEach
+                        return@takeWhile true
                     }
 
                     val me = PATTERN_END.matcher(text)
                     if (me.matches()) {
-                        if (stack.empty()) return@forEach
+                        if (stack.empty()) return@takeWhile true
                         val (offset, ids) = stack.pop()
                         ranges.add(Pair(TextRange(offset, it.startOffset - 1), ids))
-                        return@forEach
+                        return@takeWhile true
                     }
                 }
+                return@takeWhile true
             }
 
         stack.reversed().forEach {
