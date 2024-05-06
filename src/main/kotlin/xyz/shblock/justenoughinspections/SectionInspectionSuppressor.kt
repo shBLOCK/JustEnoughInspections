@@ -1,7 +1,6 @@
 package xyz.shblock.justenoughinspections
 
 import com.intellij.codeInspection.*
-import com.intellij.lang.Language
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
@@ -61,6 +60,7 @@ class SectionInspectionSuppressor : InspectionSuppressor {
     }
 
     override fun getSuppressActions(element: PsiElement?, toolId: String): Array<SuppressQuickFix> {
-        return SuppressQuickFix.EMPTY_ARRAY // TODO
+        // TODO: suppress action to suppress for the entire file
+        return SuppressQuickFix.EMPTY_ARRAY
     }
 }
