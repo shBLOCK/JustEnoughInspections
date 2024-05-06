@@ -1,5 +1,5 @@
 # JustEnoughInspections: flexible inspection suppression
-An Intellij IDE plugin that provides more flexible inspection suppression features.
+An IntelliJ IDE plugin that provides more flexible inspection suppression features.
 
 Suppression sections
 ---
