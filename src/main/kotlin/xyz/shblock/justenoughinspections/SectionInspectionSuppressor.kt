@@ -9,6 +9,7 @@ import com.intellij.psi.util.*
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import com.intellij.util.containers.Stack
+import com.intellij.util.takeWhileInclusive
 import kotlinx.collections.immutable.toImmutableList
 import java.util.regex.Pattern
 
@@ -21,28 +22,29 @@ class SectionInspectionSuppressor : InspectionSuppressor {
         val ranges = mutableListOf<Pair<TextRange, String>>()
 
         val stack = Stack<Pair<Int, String>>()
-        var leaf = PsiTreeUtil.firstChild(file)
-        while (true) {
-            if (leaf is PsiComment) {
-                val text = leaf.text
+        val lastLeaf = PsiTreeUtil.lastChild(file)
+        generateSequence(PsiTreeUtil.firstChild(file), PsiTreeUtil::nextLeaf)
+            .takeWhileInclusive { it !== lastLeaf }
+            .forEach {
+                if (it is PsiComment) {
+                    val text = it.text
 
-                val mb = PATTERN_BEGIN.matcher(text)
-                if (mb.matches()) {
-                    stack.push(Pair(leaf.endOffset + 1, mb.group(1)))
-                    continue
-                }
+                    val mb = PATTERN_BEGIN.matcher(text)
+                    if (mb.matches()) {
+                        stack.push(Pair(it.endOffset + 1, mb.group(1)))
+                        return@forEach
+                    }
 
-                val me = PATTERN_END.matcher(text)
-                if (me.matches()) {
-                    if (stack.empty()) continue
-                    val (offset, ids) = stack.pop()
-                    ranges.add(Pair(TextRange(offset, leaf.startOffset - 1), ids))
-                    continue
+                    val me = PATTERN_END.matcher(text)
+                    if (me.matches()) {
+                        if (stack.empty()) return@forEach
+                        val (offset, ids) = stack.pop()
+                        ranges.add(Pair(TextRange(offset, it.startOffset - 1), ids))
+                        return@forEach
+                    }
                 }
             }
 
-            leaf = PsiTreeUtil.nextLeaf(file, true) ?: break
-        }
         stack.reversed().forEach {
             val (offset, ids) = it
             ranges.add(Pair(TextRange(offset, file.endOffset), ids))

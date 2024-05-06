@@ -26,9 +26,20 @@
                 </ul>
             </li>
         </ul>
+        Known Issues:
+        <ul>
+            <li>Sometimes inspections won't automatically update when inspection comments are changed.<br>Try reopening files or editing the code to force an refresh.</li>
+        </ul>
   ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.1</p>
+        <ul>
+            <li>Hotfix: fix accidental infinite loop when updating suppression sections, causing IDE freeze.</li>
+            <li>Set maximum supported IDE build version to 241.*.</li>
+            <li>Removed temporary svg icon file.</li>
+            <li>Added the known issues section to plugin description.</li>
+        </ul>
         <p>1.0</p>
         <ul>
             <li>Initial release.</li>

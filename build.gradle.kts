@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "xyz.shblock"
-version = "1.0"
+version = "1.1"
 
 repositories {
     mavenCentral()
@@ -16,6 +16,7 @@ repositories {
 intellij {
     version.set("2023.3.5")
     type.set("IC") // Target IDE Platform
+    plugins.add("PythonCore:233.14808.12")
 }
 
 tasks {
@@ -29,6 +30,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("223")
+        untilBuild.set("241.*")
     }
 
     signPlugin {
