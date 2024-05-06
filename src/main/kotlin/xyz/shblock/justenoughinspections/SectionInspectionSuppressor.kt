@@ -5,8 +5,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.util.CachedValuesManager
-import com.intellij.psi.util.childLeafs
+import com.intellij.psi.util.*
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import com.intellij.util.containers.Stack
@@ -22,7 +21,8 @@ class SectionInspectionSuppressor : InspectionSuppressor {
         val ranges = mutableListOf<Pair<TextRange, String>>()
 
         val stack = Stack<Pair<Int, String>>()
-        for (leaf in file.childLeafs) {
+        var leaf = PsiTreeUtil.firstChild(file)
+        while (true) {
             if (leaf is PsiComment) {
                 val text = leaf.text
 
@@ -40,6 +40,8 @@ class SectionInspectionSuppressor : InspectionSuppressor {
                     continue
                 }
             }
+
+            leaf = PsiTreeUtil.nextLeaf(file, true) ?: break
         }
         stack.reversed().forEach {
             val (offset, ids) = it
