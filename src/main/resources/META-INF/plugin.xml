@@ -33,6 +33,10 @@
   ]]></description>
 
     <change-notes><![CDATA[
+        <p>1.2</p>
+        <ul>
+            <li>Hotfix: fix broken hotfix.</li>
+        </ul>
         <p>1.1</p>
         <ul>
             <li>Hotfix: fix accidental infinite loop when updating suppression sections, causing IDE freeze.</li>

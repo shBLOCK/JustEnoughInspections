@@ -12,40 +12,44 @@ import com.intellij.util.containers.Stack
 import kotlinx.collections.immutable.toImmutableList
 import java.util.regex.Pattern
 
-@Suppress("PrivatePropertyName")
-class SectionInspectionSuppressor : InspectionSuppressor {
-    private val PATTERN_BEGIN = Pattern.compile(".*(?:begin|Begin|BEGIN)\\s*:\\s*" + SuppressionUtil.COMMON_SUPPRESS_REGEXP)
-    private val PATTERN_END = Pattern.compile(".*(?:end|End|END)\\s*:\\s*" + SuppressionUtilCore.SUPPRESS_INSPECTIONS_TAG_NAME)
 
+val PATTERN_BEGIN = Pattern.compile(".*(?:begin|Begin|BEGIN)\\s*:\\s*" + SuppressionUtil.COMMON_SUPPRESS_REGEXP)!!
+val PATTERN_END = Pattern.compile(".*(?:end|End|END)\\s*:\\s*" + SuppressionUtilCore.SUPPRESS_INSPECTIONS_TAG_NAME)!!
+
+class SectionInspectionSuppressor : InspectionSuppressor {
     private fun getSuppressRanges(file: PsiFile): List<Pair<TextRange, String>> {
         val ranges = mutableListOf<Pair<TextRange, String>>()
-
         val stack = Stack<Pair<Int, String>>()
-        val lastLeaf = PsiTreeUtil.lastChild(file)
-        generateSequence(PsiTreeUtil.firstChild(file), PsiTreeUtil::nextLeaf)
-            .takeWhile {
-                if (it === lastLeaf) return@takeWhile false
 
-                if (it is PsiComment) {
-                    val text = it.text
+        fun process(element: PsiElement) {
+            println(element.text)
+            if (element is PsiComment) {
+                val text = element.text
 
-                    val mb = PATTERN_BEGIN.matcher(text)
-                    if (mb.matches()) {
-                        stack.push(Pair(it.endOffset + 1, mb.group(1)))
-                        return@takeWhile true
-                    }
-
-                    val me = PATTERN_END.matcher(text)
-                    if (me.matches()) {
-                        if (stack.empty()) return@takeWhile true
-                        val (offset, ids) = stack.pop()
-                        ranges.add(Pair(TextRange(offset, it.startOffset - 1), ids))
-                        return@takeWhile true
-                    }
+                val mb = PATTERN_BEGIN.matcher(text)
+                if (mb.matches()) {
+                    stack.push(Pair(element.endOffset + 1, mb.group(1)))
+                    return
                 }
-                return@takeWhile true
-            }
 
+                val me = PATTERN_END.matcher(text)
+                if (me.matches()) {
+                    if (stack.empty()) return
+                    val (offset, ids) = stack.pop()
+                    ranges.add(Pair(TextRange(offset, element.startOffset - 1), ids))
+                    return
+                }
+            }
+        }
+
+        var leaf: PsiElement? = null
+        val lastLeaf = PsiTreeUtil.lastChild(file)
+        while (leaf !== lastLeaf) {
+            leaf = if (leaf == null) PsiTreeUtil.firstChild(file) else PsiTreeUtil.nextLeaf(leaf)
+            process(leaf!!)
+        }
+
+        // Handle unclosed sections
         stack.reversed().forEach {
             val (offset, ids) = it
             ranges.add(Pair(TextRange(offset, file.endOffset), ids))
